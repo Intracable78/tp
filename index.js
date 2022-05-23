@@ -93,6 +93,48 @@ app.get('/', async (req, res) => {
     res.send('ok')
 })
 
+
+
 server.listen(3000, () => {
     console.log('listening on *:3000');
 });
+
+
+app.get('/search/data/organization/count', async (req, res) => {
+    try {
+        const searchData = await Data.aggregate([
+            {
+                $unwind: "$organization_id"
+            },
+            {
+                $group: {
+                    _id: "$organization",
+                    nb: { $sum: 1 },
+                }
+            },
+        ]).exec();
+        res.send(searchData)
+    } catch (err) {
+        console.log(err)
+        res.send('data not found')
+    }
+})
+
+app.get('/search/data/organization/:city', async (req, res) => {
+    const city = req.params.city
+    try {
+        const searchData = await Data.find(({ organization: { $regex: city } }));
+        res.send(searchData)
+    } catch (err) {
+        res.send('data not found')
+    }
+})
+
+app.get('/search/data/url/website', async (req, res) => {
+    try {
+        const searchData = await Data.find(({ url: { $not: { $regex: /\.fr$/ } } }));
+        res.send(searchData)
+    } catch (err) {
+        res.send('data not found')
+    }
+})
